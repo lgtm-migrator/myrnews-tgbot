@@ -7,7 +7,7 @@ COPY --chown=nobody:nobody ./package.json ./package-lock.json ./tsconfig.json .n
 
 FROM base AS deps
 RUN \
-    npm ci --ignore-scripts --only=prod --no-audit --no-fund && \
+    npm ci --ignore-scripts --omit=dev --no-audit --no-fund && \
     rm -f .npmrc && \
     npm rebuild && \
     npm run prepare --if-present

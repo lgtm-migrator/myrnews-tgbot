@@ -1,47 +1,53 @@
 /* istanbul ignore file */
 
+import crypto from 'node:crypto';
+import { Bot } from 'grammy';
+import { autoRetry } from '@grammyjs/auto-retry';
 import Bugsnag from '@bugsnag/js';
-import { Telegraf } from 'telegraf';
-import crypto from 'crypto';
-import knex from 'knex';
-import { buildKnexConfig } from './knexfile';
-import type { BotContext } from './lib/types';
 import { getEnvironment } from './lib/environment';
-import { queryCallbackHandler } from './controllers/callbackquery';
 import { lifecycle } from './controllers/lifecycle';
 import { startBugsnag } from './lib/bugsnag';
+import { createServer } from './lib/server';
+
+function fatal(err: Error): void {
+    console.error(err);
+    Bugsnag.notify(err);
+    process.exit(1);
+}
 
 (async (): Promise<void> => {
     const env = getEnvironment();
     await startBugsnag(env);
 
     try {
-        const bot = new Telegraf<BotContext>(env.BOT_TOKEN);
-        bot.context.db = knex(buildKnexConfig());
-        bot.on('callback_query', queryCallbackHandler);
+        const bot = new Bot(env.BOT_TOKEN);
+        bot.api.config.use(autoRetry({ maxRetryAttempts: 10, maxDelaySeconds: 60, retryOnInternalServerErrors: true }));
 
         if (env.WEBHOOK_DOMAIN && env.WEBHOOK_PORT) {
             const random = crypto.randomBytes(32).toString('hex');
             const hookPath = env.PATH_PREFIX ? `/${env.PATH_PREFIX}/${random}` : `/${random}`;
-            await bot.launch({
-                webhook: {
-                    port: env.WEBHOOK_PORT,
-                    domain: env.WEBHOOK_DOMAIN,
-                    host: env.LISTEN_HOST,
-                    hookPath,
-                },
+            const server = createServer(bot, hookPath);
+            server.on('error', fatal);
+            server.listen(env.WEBHOOK_PORT, env.LISTEN_HOST, () => {
+                bot.api.setWebhook(`https://${env.WEBHOOK_DOMAIN}${hookPath}`).catch(fatal);
             });
 
-            process.on('SIGTERM', () => bot.stop());
-            process.on('SIGINT', () => bot.stop());
+            process.on('SIGTERM', (): void => {
+                bot.api.setWebhook('').finally(() => {
+                    server.close(() => process.exit(0));
+                });
+            });
         } else {
-            await bot.launch();
+            bot.start().catch(fatal);
+            process.on('SIGTERM', () => {
+                bot.stop().finally(() => process.exit(0));
+            });
         }
+
+        process.on('SIGINT', () => process.kill(process.pid, 'SIGTERM'));
 
         lifecycle(env, bot);
     } catch (e) {
-        console.error(e);
-        Bugsnag.notify(e as Error);
-        process.exit(1);
+        fatal(e as Error);
     }
-})().catch((e) => console.error(e));
+})().catch(fatal);

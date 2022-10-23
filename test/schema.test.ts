@@ -13,6 +13,6 @@ describe('Database schema', (): void => {
     it('should remove reactions when the corresponding post is deleted', async (): Promise<unknown> => {
         const n = await db('posts').where('post_id', 43045).delete();
         expect(n).toBeGreaterThan(0);
-        return expect(db('reactions').where('post_id', 43045).count({ count: '*' })).resolves.toEqual([{ count: 0 }]);
+        return expect(db('posts').where('post_id', 43045).count({ count: '*' })).resolves.toEqual([{ count: 0 }]);
     });
 });

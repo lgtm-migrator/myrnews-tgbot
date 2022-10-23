@@ -22,19 +22,20 @@
   "dependencies": {
     "@adobe/fetch": "^3.0.3",
     "@bugsnag/js": "^7.6.0",
+    "@grammyjs/auto-retry": "^1.1.1",
     "@myrotvorets/envalidators": "^2.0.0",
     "@myrotvorets/opentelemetry-configurator": "^2.0.1",
     "@myrotvorets/opentelemetry-plugin-knex": "^0.24.0",
     "@opentelemetry/api": "^1.0.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.33.1",
     "@opentelemetry/core": "^1.0.0",
     "@opentelemetry/instrumentation": "^0.33.0",
     "debug": "^4.3.1",
     "envalid": "^7.0.0",
+    "grammy": "^1.11.2",
     "knex": "^2.0.0",
     "knex-mariadb": "^2.0.0",
-    "mariadb": "^3.0.0",
-    "telegraf": "^4.8.2",
-    "typegram": "^3.9.0"
+    "mariadb": "^3.0.0"
   },
   "devDependencies": {
     "@myrotvorets/eslint-config-myrotvorets-ts": "^2.2.5",
@@ -42,6 +43,7 @@
     "@types/debug": "^4.1.5",
     "@types/jest": "^29.0.0",
     "@types/node": "^18.11.3",
+    "@types/node-fetch": "^2.6.2",
     "better-sqlite3": "^7.5.3",
     "eslint-formatter-gha": "^1.2.0",
     "husky": "^8.0.0",
