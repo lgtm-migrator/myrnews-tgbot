@@ -2,14 +2,14 @@ import { Knex, knex } from 'knex';
 import { buildKnexConfig } from '../knexfile';
 import type { Post } from '../lib/types';
 
-let db: Knex | undefined = undefined;
+let database: Knex | undefined = undefined;
 
 export function getDB(): Knex {
-    if (db === undefined) {
-        db = knex(buildKnexConfig());
+    if (database === undefined) {
+        database = knex(buildKnexConfig());
     }
 
-    return db;
+    return database;
 }
 
 export function addPost(db: Knex, postId: number): Promise<number[]> {
